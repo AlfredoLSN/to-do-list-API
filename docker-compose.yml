@@ -1,0 +1,11 @@
+services:
+  db:
+    build: .
+    container_name: backend-db
+    ports:
+      - '5432:5432'
+    volumes:
+      - .docker/dbdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=todolist
