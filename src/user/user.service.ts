@@ -1,26 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './repositories/user.repository';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
+  constructor(private repository: UserRepository) {}
   create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+    return this.repository.create(createUserDto);
   }
 
   findAll() {
-    return `This action returns all user`;
+    return this.repository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<UserEntity> {
+    const user = await this.repository.findById(id);
+    if (!user) {
+      throw new NotFoundException(`Can't finf user with id ${id}`);
+    }
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    return this.repository.update(id, updateUserDto);
   }
 
   remove(id: number) {
-    return `This action removes a #${id} user`;
+    return this.repository.delete(id);
   }
 }
