@@ -15,10 +15,18 @@ export class UserService {
     return this.repository.findAll();
   }
 
-  async findOne(id: number): Promise<UserEntity> {
+  async findById(id: number): Promise<UserEntity> {
     const user = await this.repository.findById(id);
     if (!user) {
       throw new NotFoundException(`Can't finf user with id ${id}`);
+    }
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<UserEntity> {
+    const user = await this.repository.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException(`Can't find user with email ${email}`);
     }
     return user;
   }
