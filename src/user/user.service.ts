@@ -3,15 +3,22 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './repositories/user.repository';
 import { UserEntity } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private repository: UserRepository) {}
-  create(createUserDto: CreateUserDto) {
-    return this.repository.create(createUserDto);
+  async create(createUserDto: CreateUserDto) {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    const userWithHashedPassword = {
+      ...createUserDto,
+      password: hashedPassword,
+    };
+    return this.repository.create(userWithHashedPassword);
   }
 
-  findAll() {
+  async findAll() {
     return this.repository.findAll();
   }
 
@@ -31,11 +38,14 @@ export class UserService {
     return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.repository.update(id, updateUserDto);
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(updateUserDto.password, salt);
+    const temp = { ...updateUserDto, password: hashedPassword };
+    return this.repository.update(id, temp);
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return this.repository.delete(id);
   }
 }

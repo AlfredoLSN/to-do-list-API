@@ -9,9 +9,17 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export class TaskRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTaskDto: CreateTaskDto): Promise<TaskEntity> {
+  async create(ownerId: number, createTaskDto: CreateTaskDto): Promise<any> {
     return this.prisma.task.create({
-      data: createTaskDto,
+      data: {
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        owner: {
+          connect: {
+            id: ownerId,
+          },
+        },
+      },
     });
   }
 
@@ -19,19 +27,33 @@ export class TaskRepository {
     return this.prisma.task.findMany();
   }
 
-  async findById(id: number): Promise<TaskEntity> {
+  async findById(ownerId: number, id: number): Promise<TaskEntity> {
     return this.prisma.task.findUnique({
       where: {
         id,
+        ownerId,
       },
     });
   }
 
-  async update(id: number, updateTaskDto: UpdateTaskDto): Promise<TaskEntity> {
+  async findByUser(userId: number): Promise<TaskEntity[]> {
+    return this.prisma.task.findMany({
+      where: {
+        ownerId: userId,
+      },
+    });
+  }
+
+  async update(
+    ownerId: number,
+    id: number,
+    updateTaskDto: UpdateTaskDto,
+  ): Promise<TaskEntity> {
     try {
       const updatedUser = await this.prisma.task.update({
         where: {
           id,
+          ownerId,
         },
         data: updateTaskDto,
       });
@@ -39,25 +61,28 @@ export class TaskRepository {
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === 'P2025') {
-          throw new NotFoundException(`Can´t find user with id ${id}`);
+          throw new NotFoundException(`Can't find task with id ${id}`);
         }
       }
     }
   }
 
-  async delete(id: number): Promise<TaskEntity> {
+  async delete(ownerId: number, id: number): Promise<TaskEntity> {
     try {
-      const deletedUser = await this.prisma.task.delete({
+      const deletedTask = await this.prisma.task.delete({
         where: {
           id,
+          ownerId,
         },
       });
-      return deletedUser;
+      return deletedTask;
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === 'P2025') {
-          throw new NotFoundException(`Can't find user with id ${id}`);
+          throw new NotFoundException(`Can't find task with id ${id}`);
         }
+      } else {
+        console.log(err);
       }
     }
   }
